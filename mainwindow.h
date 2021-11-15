@@ -5,6 +5,7 @@
 #include "foundfile.h"
 #include "sqlsyntaxhighlighter.h"
 #include <QListWidget>
+#include <QTranslator>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -66,6 +67,7 @@ private:
     SQLSyntaxHighlighter *sqlSyntaxHighlighter;
     QString selectedFile;
     int lastIndexFound;
+    QTranslator *trans;
 
 protected:
     QList<QString> selectedExtensions();

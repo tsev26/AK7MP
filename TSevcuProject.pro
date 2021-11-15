@@ -22,9 +22,17 @@ HEADERS += \
 FORMS += \
     mainwindow.ui
 
+TRANSLATIONS += \
+    translation_cs.ts \
+    translation_en.ts
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-DISTFILES +=
+DISTFILES += \
+    translation_cs.ts
+
+RESOURCES += \
+    res.qrc

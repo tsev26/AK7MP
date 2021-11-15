@@ -66,22 +66,19 @@ void MainWindow::startProgramWithValueFromRegister()
         break;
     }
 
-    if (set.value("general/lang","cz") == "cz"){
-        locale  = QLocale(QLocale::Czech);
-        /*
-        ui->actionEnglish->setChecked(false);
-        ui->actionCzech->setChecked(true);
-        trans->load(":/lang/translation_cs.qm");
-        */
-    }else if (set.value("general/lang","cz") == "en"){
+    trans = new QTranslator();
+    if (set.value("general/lang","en").toString() == "cs"){
         locale  = QLocale(QLocale::English);
-        /*
-        ui->actionEnglish->setChecked(true);
-        ui->actionCzech->setChecked(false);
+        ui->languageButton->setText("EN");
         trans->load(":/lang/translation_en.qm");
-        */
+    }else{
+        locale  = QLocale(QLocale::Czech);
+        ui->languageButton->setText("CZ");
+        trans->load(":/lang/translation_cs.qm");
     }
 
+    qApp->installTranslator(trans);
+    ui->retranslateUi(this);
 }
 
 void MainWindow::saveValueToRegister()
@@ -121,7 +118,7 @@ void MainWindow::on_search_clicked()
     QString targetStr = ui->ExpressionEdit->text();
 
     if (targetStr.length() < 3) {
-        QMessageBox::critical(this, "TSevcu app", "Délka hledaného výrazu musím mít alespoň 3 znaky!");
+        QMessageBox::critical(this, "TSevcu app", tr("Délka hledaného výrazu musím mít alespoň 3 znaky!"));
         return;
     }
 
@@ -129,17 +126,17 @@ void MainWindow::on_search_clicked()
 
     QDir pathDir(directory);
     if (!pathDir.exists() || directory.length() < 2){
-        QMessageBox::critical(this, "TSevcu app", "Zadaná cesta není validní!");
+        QMessageBox::critical(this, "TSevcu app", tr("Zadaná cesta není validní!"));
         return;
     }
     QList<QString> checkedExtensions = selectedExtensions();
     if (checkedExtensions.count() == 0){
-        QMessageBox::critical(this, "TSevcu app", "Vyberte alespoň 1 příponu souboru!");
+        QMessageBox::critical(this, "TSevcu app", tr("Vyberte alespoň 1 příponu souboru!"));
         return;
     }
 
     if (!ui->InNameCheckBox->isChecked() && !ui->InTextCheckBox->isChecked()){
-        QMessageBox::critical(this, "TSevcu app", "Vyberte alespoň 1 možnost, kde vyhledávat!");
+        QMessageBox::critical(this, "TSevcu app", tr("Vyberte alespoň 1 možnost, kde vyhledávat!"));
         return;
     }
 
@@ -245,7 +242,7 @@ QList<QString> MainWindow::selectedExtensions()
 
 void MainWindow::restartListsAndTexts()
 {
-    ui->PickFileLabel->setText("Vyber soubor");
+    ui->PickFileLabel->setText(tr("Vyber soubor"));
     ui->textEdit->setText("");
     ui->textEditForSQL->setText("");
     ui->textEditForSQL->setVisible(false);
@@ -273,10 +270,10 @@ void MainWindow::on_listWidget_itemClicked(QListWidgetItem *item)
     ui->PickFileLabel->setText(item->text());
     QFileInfo fileInfo(fileName);
 
-    ui->DateCreatedLabel->setText(locale.toString(fileInfo.birthTime(), "dd.MM.yy"));
-    ui->DateCreatedNameLabel->setText("Vytvořeno:");
-    ui->DateUpdatedLabel->setText(locale.toString(fileInfo.lastModified(), "dd.MM.yy"));
-    ui->DateUpdatedNameLabel->setText("Upraveno:");
+    ui->DateCreatedLabel->setText(locale.toString(fileInfo.birthTime(), tr("dd.MM.yyyy")));
+    ui->DateCreatedNameLabel->setText(tr("Vytvořeno:"));
+    ui->DateUpdatedLabel->setText(locale.toString(fileInfo.lastModified(), tr("dd.MM.yyyy")));
+    ui->DateUpdatedNameLabel->setText(tr("Upraveno:"));
 
     ui->PathFileLabel->setText(fileInfo.absolutePath().right(fileInfo.absolutePath().length()-ui->PathEdit->text().length()));
 
@@ -301,7 +298,7 @@ void MainWindow::on_listWidget_itemClicked(QListWidgetItem *item)
             file.close();
         }else{
             //FoundFileList.removeAll(item); //nevim jestli funguje tak jak ma, mozna mi tam chybi operator porovnani (ale kdyz funguje contains, tka by mohlo fungovat i tohle)
-            QMessageBox::critical(this, "TSevcu App", "Soubor se nepodařilo otevřít!");
+            QMessageBox::critical(this, "TSevcu App", tr("Soubor se nepodařilo otevřít!"));
         }
     }
 }
@@ -490,10 +487,17 @@ void MainWindow::on_seachInTextLineEdit_returnPressed()
 
 void MainWindow::on_languageButton_clicked()
 {
+    QSettings set;
     if(ui->languageButton->text() == "CZ"){
-        ui->languageButton->setText("EN");
+        set.setValue("general/lang","en");
+        locale  = QLocale(QLocale::English);
+        trans->load(":/lang/translation_en.qm");
     }else{
-        ui->languageButton->setText("CZ");
+        set.setValue("general/lang","cz");
+        locale  = QLocale(QLocale::Czech);
+        trans->load(":/lang/translation_cs.qm");
     }
+    qApp->installTranslator(trans);
+    ui->retranslateUi(this);
 }
 
