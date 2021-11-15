@@ -11,8 +11,7 @@
 #include <QFont>
 #include <QLocale>
 #include <QSettings>
-
-
+#include <QDesktopServices>
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -21,6 +20,10 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     ui->horizontalWidget_2->setVisible(false);
+    ui->textEditForSQL->setVisible(false);
+    ui->horizontalWidgetBottom->setVisible(false);
+
+    sqlSyntaxHighlighter = new SQLSyntaxHighlighter(ui->textEditForSQL->document());
 
     startProgramWithValueFromRegister();
 }
@@ -28,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete sqlSyntaxHighlighter;
 }
 
 void MainWindow::startProgramWithValueFromRegister()
@@ -100,8 +104,10 @@ void MainWindow::saveValueToRegister()
 
 void MainWindow::on_pickFolder_clicked()
 {
+    QSettings set;
+
     QString dir = QFileDialog::getExistingDirectory(this, tr("Vybrat"),
-                                                "/home",
+                                                set.value("general/path","").toString(),
                                                 QFileDialog::ShowDirsOnly
                                                 );
 
@@ -139,15 +145,13 @@ void MainWindow::on_search_clicked()
 
     restartListsAndTexts();
 
-
     QDirIterator it(directory, QDirIterator::Subdirectories);
 
-    // Iterate through the directory using the QDirIterator
     while (it.hasNext()) {
         QString filename = it.next();
         QFileInfo file(filename);
 
-        if (file.isDir()) { // Check if it's a dir
+        if (file.isDir()) {
             continue;
         }
 
@@ -239,12 +243,13 @@ QList<QString> MainWindow::selectedExtensions()
 }
 
 
-
 void MainWindow::restartListsAndTexts()
 {
-    //ui->listWidget->clear();
     ui->PickFileLabel->setText("Vyber soubor");
     ui->textEdit->setText("");
+    ui->textEditForSQL->setText("");
+    ui->textEditForSQL->setVisible(false);
+    ui->textEdit->setVisible(true);
     ui->DateCreatedLabel->setText("");
     ui->DateCreatedNameLabel->setText("");
     ui->DateUpdatedLabel->setText("");
@@ -255,12 +260,16 @@ void MainWindow::restartListsAndTexts()
         delete foundFile;
     }
     foundFileList.clear();
+    ui->horizontalWidgetBottom->setVisible(false);
 }
 
 
 void MainWindow::on_listWidget_itemClicked(QListWidgetItem *item)
 {
     QString fileName = item->data(12).toString();
+
+    setSelectedFile(fileName);
+
     ui->PickFileLabel->setText(item->text());
     QFileInfo fileInfo(fileName);
 
@@ -275,14 +284,20 @@ void MainWindow::on_listWidget_itemClicked(QListWidgetItem *item)
     if (!fileName.isEmpty()){
         QFile file(fileName);
         if (file.open(QIODevice::Text | QIODevice::ReadOnly)) {
+
+            ui->horizontalWidgetBottom->setVisible(true);
+            ui->seachInTextLineEdit->setFocus();
+
             QString text = file.readAll();
             if(fileInfo.suffix() == "sql"){
-                sqlSyntaxHighlighter = new SQLSyntaxHighlighter(ui->textEdit->document());
-                ui->textEdit->setText(text);
+                ui->textEditForSQL->setText(text);
+                ui->textEditForSQL->setVisible(true);
+                ui->textEdit->setVisible(false);
             }else{
+                ui->textEditForSQL->setVisible(false);
+                ui->textEdit->setVisible(true);
                 ui->textEdit->setText(text);
             }
-            //ui->textEdit->setText(text);
             file.close();
         }else{
             //FoundFileList.removeAll(item); //nevim jestli funguje tak jak ma, mozna mi tam chybi operator porovnani (ale kdyz funguje contains, tka by mohlo fungovat i tohle)
@@ -290,7 +305,6 @@ void MainWindow::on_listWidget_itemClicked(QListWidgetItem *item)
         }
     }
 }
-
 
 
 void MainWindow::on_OrderByPathRadioButton_clicked()
@@ -397,4 +411,89 @@ void MainWindow::on_OrderBySuffixRadioButton_clicked()
     populateListWidget();
 }
 
+
+void MainWindow::on_pushButton_clicked()
+{
+    QString path = QDir::fromNativeSeparators(getSelectedFile());
+    QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+}
+
+const QString &MainWindow::getSelectedFile() const
+{
+    return selectedFile;
+}
+
+void MainWindow::setSelectedFile(const QString &newSelectedFile)
+{
+    selectedFile = newSelectedFile;
+}
+
+
+void MainWindow::on_seachInTextLineEdit_textEdited(const QString &arg1)
+{
+    selectSearchText(0);
+}
+
+
+void MainWindow::on_nextButton_clicked()
+{
+    if (!selectSearchText(lastIndexFound)){
+        selectSearchText(0);
+    }
+}
+
+bool MainWindow::selectSearchText(int position)
+{
+    QFileInfo fileInfo(getSelectedFile());
+    QTextEdit* textEdit;
+    if(fileInfo.suffix() == "sql"){
+        textEdit = ui->textEditForSQL;
+    }else{
+        textEdit = ui->textEdit;
+    }
+    QString text = textEdit->toPlainText();
+    QString searchedText = ui->seachInTextLineEdit->text();
+
+    int startPos = text.indexOf(searchedText,position,Qt::CaseInsensitive);
+    int endPos = startPos + searchedText.length();
+
+    if (startPos != -1){
+        lastIndexFound = endPos;
+
+        QTextCursor c = textEdit->textCursor();
+        c.setPosition(startPos);
+        c.setPosition(endPos, QTextCursor::KeepAnchor);
+        textEdit->setTextCursor(c);
+    }
+
+    return startPos != -1;
+}
+
+
+void MainWindow::on_PathEdit_returnPressed()
+{
+    on_pickFolder_clicked();
+}
+
+
+void MainWindow::on_ExpressionEdit_returnPressed()
+{
+    on_search_clicked();
+}
+
+
+void MainWindow::on_seachInTextLineEdit_returnPressed()
+{
+    on_nextButton_clicked();
+}
+
+
+void MainWindow::on_languageButton_clicked()
+{
+    if(ui->languageButton->text() == "CZ"){
+        ui->languageButton->setText("EN");
+    }else{
+        ui->languageButton->setText("CZ");
+    }
+}
 

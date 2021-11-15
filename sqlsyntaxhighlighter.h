@@ -15,7 +15,7 @@ class SQLSyntaxHighlighter : public QSyntaxHighlighter
 
 public:
     SQLSyntaxHighlighter (QTextDocument *parent = 0);
-    ~SQLSyntaxHighlighter();
+    //~SQLSyntaxHighlighter();
 
 protected:
     void highlightBlock(const QString &text) override;

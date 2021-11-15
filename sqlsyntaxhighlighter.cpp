@@ -128,18 +128,6 @@ SQLSyntaxHighlighter::SQLSyntaxHighlighter(QTextDocument *parent) : QSyntaxHighl
     commentEndExpression = QRegularExpression(QStringLiteral("\\*/"));
 }
 
-SQLSyntaxHighlighter::~SQLSyntaxHighlighter()
-{
-    delete &highlightingRules;
-    delete &commentStartExpression;
-    delete &commentEndExpression;
-    delete &keywordFormat;
-    delete &classFormat;
-    delete &singleLineCommentFormat;
-    delete &multiLineCommentFormat;
-    delete &quotationFormat;
-    delete &functionFormat;
-}
 
 void SQLSyntaxHighlighter::highlightBlock(const QString &text)
 {

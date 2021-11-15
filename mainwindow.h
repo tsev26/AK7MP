@@ -20,6 +20,9 @@ public:
 
     QLocale locale;
 
+    const QString &getSelectedFile() const;
+    void setSelectedFile(const QString &newSelectedFile);
+
 private slots:
     void on_pickFolder_clicked();
 
@@ -41,10 +44,28 @@ private slots:
 
     void on_OrderBySuffixRadioButton_clicked();
 
+    void on_pushButton_clicked();
+
+    void on_seachInTextLineEdit_textEdited(const QString &arg1);
+
+    void on_nextButton_clicked();
+
+    bool selectSearchText(int position = 0);
+
+    void on_PathEdit_returnPressed();
+
+    void on_ExpressionEdit_returnPressed();
+
+    void on_seachInTextLineEdit_returnPressed();
+
+    void on_languageButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     QList<FoundFile*> foundFileList;
     SQLSyntaxHighlighter *sqlSyntaxHighlighter;
+    QString selectedFile;
+    int lastIndexFound;
 
 protected:
     QList<QString> selectedExtensions();
